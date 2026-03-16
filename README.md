@@ -1,5 +1,4 @@
-# Q_pay-fast-micropayment-Bitcoin
-Q_pay prototype for fast micropayment using bitcoin 
+% Q_pay prototype for fast micropayment using bitcoin 
 # Q_pay Prototype
 
 This repository contains a prototype implementation of **Q_pay**, a fast micropayment protocol for Bitcoin that enables sub-second service confirmation using committee-based approval and Schnorr multi-signatures.
