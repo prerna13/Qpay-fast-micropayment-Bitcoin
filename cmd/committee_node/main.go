@@ -6,23 +6,26 @@ import (
 	"net/http"
 	"os"
 
-	"qpay/pkg/committee"
-	"qpay/pkg/types"
+	"qpay-artifact/pkg/crypto"
+	"qpay-artifact/pkg/types"
 )
 
-var node = committee.CommitteeNode{
-	ID: "node",
-}
+var priv, _ = crypto.GenerateKey()
 
-func approveHandler(w http.ResponseWriter, r *http.Request) {
+func approve(w http.ResponseWriter, r *http.Request) {
 
 	var req types.ApprovalRequest
 
 	json.NewDecoder(r.Body).Decode(&req)
 
-	sig := node.Approve(req.Tx)
+	sig := crypto.Sign(priv, []byte(req.Tx.TxID))
 
-	json.NewEncoder(w).Encode(sig)
+	resp := types.PartialSignature{
+		NodeID: "committee",
+		Sig:    sig,
+	}
+
+	json.NewEncoder(w).Encode(resp)
 }
 
 func main() {
@@ -33,9 +36,9 @@ func main() {
 		port = "8000"
 	}
 
-	http.HandleFunc("/approve", approveHandler)
+	http.HandleFunc("/approve", approve)
 
-	fmt.Println("Committee node running on port", port)
+	fmt.Println("Committee node running:", port)
 
 	http.ListenAndServe(":"+port, nil)
 }
