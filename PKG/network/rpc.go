@@ -4,21 +4,18 @@ import (
 	"bytes"
 	"encoding/json"
 	"net/http"
-	"qpay/pkg/types"
+
+	"qpay-artifact/pkg/types"
 )
 
-func SendApprovalRequest(nodeURL string, tx types.QPayTransaction) (types.PartialSignature, error) {
+func RequestApproval(node string, tx types.QPayTransaction) (types.PartialSignature, error) {
 
-	req := types.ApprovalRequest{
-		Tx: tx,
-	}
+	req := types.ApprovalRequest{Tx: tx}
 
-	data, err := json.Marshal(req)
-	if err != nil {
-		return types.PartialSignature{}, err
-	}
+	data, _ := json.Marshal(req)
 
-	resp, err := http.Post(nodeURL+"/approve", "application/json", bytes.NewBuffer(data))
+	resp, err := http.Post(node+"/approve", "application/json", bytes.NewBuffer(data))
+
 	if err != nil {
 		return types.PartialSignature{}, err
 	}
@@ -26,7 +23,8 @@ func SendApprovalRequest(nodeURL string, tx types.QPayTransaction) (types.Partia
 	defer resp.Body.Close()
 
 	var sig types.PartialSignature
-	err = json.NewDecoder(resp.Body).Decode(&sig)
 
-	return sig, err
+	json.NewDecoder(resp.Body).Decode(&sig)
+
+	return sig, nil
 }
