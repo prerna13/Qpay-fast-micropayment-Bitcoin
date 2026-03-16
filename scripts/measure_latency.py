@@ -1,16 +1,33 @@
-import subprocess
-import statistics
+import requests
+import uuid
+import time
+import csv
 
-runs = []
+sizes = [16,32,64,128,256,512]
 
-for i in range(20):
+with open("results/latency.csv","w") as f:
 
-    out = subprocess.check_output(
-        ["go","run","cmd/buyer/main.go"]
-    ).decode()
+    writer = csv.writer(f)
 
-    latency = float(out.split(":")[1].replace("ms",""))
+    writer.writerow(["committee_size","requests","latency"])
 
-    runs.append(latency)
+    for size in sizes:
 
-print("Average latency:", statistics.mean(runs))
+        for rps in [500,1000,2000,3500]:
+
+            start = time.time()
+
+            for i in range(rps):
+
+                tx = {
+                    "TxID":str(uuid.uuid4()),
+                    "Buyer":"Alice",
+                    "Seller":"Bob",
+                    "Amount":0.001
+                }
+
+                requests.post("http://localhost:9000/request",json=tx)
+
+            latency = time.time() - start
+
+            writer.writerow([size,rps,latency])
