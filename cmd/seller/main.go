@@ -1,23 +1,22 @@
 package main
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"os"
 
-	"qpay/pkg/network"
-	"qpay/pkg/types"
+	"qpay-artifact/pkg/network"
+	"qpay-artifact/pkg/protocol"
+	"qpay-artifact/pkg/types"
 )
 
-var committeeNodes = []string{
+var committee = []string{
 	"http://localhost:8000",
 	"http://localhost:8001",
 	"http://localhost:8002",
 }
 
-func requestPaymentHandler(w http.ResponseWriter, r *http.Request) {
+func requestHandler(w http.ResponseWriter, r *http.Request) {
 
 	var tx types.QPayTransaction
 
@@ -25,44 +24,25 @@ func requestPaymentHandler(w http.ResponseWriter, r *http.Request) {
 
 	var sigs []types.PartialSignature
 
-	for _, node := range committeeNodes {
+	for _, node := range committee {
 
-		sig, err := network.SendApprovalRequest(node, tx)
+		sig, err := network.RequestApproval(node, tx)
 
 		if err == nil {
 			sigs = append(sigs, sig)
 		}
 	}
 
-	req := map[string]interface{}{
-		"Tx":   tx,
-		"Sigs": sigs,
-	}
+	protocol.AggregateProof(tx, sigs)
 
-	data, _ := json.Marshal(req)
-
-	resp, err := http.Post(
-		"http://localhost:8500/aggregate",
-		"application/json",
-		bytes.NewBuffer(data),
-	)
-
-	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
-	}
-
-	defer resp.Body.Close()
-
-	fmt.Println("Commit proof generated")
-
+	w.Write([]byte("service delivered"))
 }
 
 func main() {
 
-	http.HandleFunc("/request_payment", requestPaymentHandler)
+	http.HandleFunc("/request", requestHandler)
 
-	fmt.Println("Seller running on port 9000")
+	fmt.Println("Seller running 9000")
 
 	http.ListenAndServe(":9000", nil)
 }
