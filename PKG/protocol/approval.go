@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"qpay-artifact/pkg/bitcoin"
 	"qpay-artifact/pkg/types"
 )
 
@@ -11,9 +12,9 @@ func AggregateProof(tx types.QPayTransaction, sigs []types.PartialSignature) {
 
 	data, _ := json.Marshal(tx)
 
-	fmt.Println("Commit proof generated for tx:", tx.TxID)
+	proof := fmt.Sprintf("%x", data)
 
-	fmt.Println("Signatures collected:", len(sigs))
+	fmt.Println("Commit proof generated:", proof)
 
-	fmt.Println("Transaction message size:", len(data))
+	bitcoin.AnchorCommitProof(proof)
 }
